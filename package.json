@@ -26,6 +26,7 @@
     "tape": "^4.0.1"
   },
   "dependencies": {
+    "axios": "^0.5.4",
     "browser-request": "^0.3.3",
     "request": "^2.60.0"
   },

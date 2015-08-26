@@ -13,6 +13,7 @@ var OpenpublishState = function(baseOptions) {
   var findTips = function(options, callback) {
     var sha1 = options.sha1;
     request(baseUrl + "/opendocs/sha1/" + sha1 + "/tips", function(err, res, body) {
+
       var tips = JSON.parse(body);
       var totalTipAmount = 0;
       var tipCount = tips.length;
