@@ -64,3 +64,42 @@ test('should find 10 images that have been registered with Open Publish', functi
          t.end();
       });
 });
+
+// findDocsByUser
+test('should find all opendocs by specified user', function (t) {
+   openpublishState.findDocsByUser({address: "mjf6CRReqGSyvbgryjE3fbGjptRRfAL7cg"})
+      .then(function(res) {
+         t.ok(!res.err, 'err is false');
+         t.ok(res.data.length > 0, "found some posts at this address");
+         var doc = res.data[0];
+         t.ok(doc.sha1 !== null, "doc's sha1 should not be null");
+         t.ok(doc.btih !== null, "doc's btih should not be null");
+         t.ok(doc.name !== null, "doc's name should not be null");
+         t.ok(doc.size !== null, "doc's size should not be null");
+         t.ok(doc.type !== null, "doc's type should not be null");
+         t.end();
+      });
+});
+
+test('should find all opendocs and opendocs\' tips by specified user', function (t) {
+   openpublishState.findDocsByUser({
+    address: "mjf6CRReqGSyvbgryjE3fbGjptRRfAL7cg",
+    includeTips: true
+   }).then(function(res) {
+      console.log("here at test with: ", res);
+      t.ok(!res.err, 'err is false');
+      t.ok(res.data.length > 0, "found some posts at this address");
+      var doc = res.data[0];
+      t.ok(doc.sha1 !== null, "doc's sha1 should not be null");
+      t.ok(doc.btih !== null, "doc's btih should not be null");
+      t.ok(doc.name !== null, "doc's name should not be null");
+      t.ok(doc.size !== null, "doc's size should not be null");
+      t.ok(doc.type !== null, "doc's type should not be null");
+      console.log("doc: ", doc);
+      t.ok(doc.tipCount >= 0, 'tipCount');
+      t.ok(doc.totalTipAmount >= 0, 'totalTipAmount');
+      t.ok(doc.tips.length >= 0, 'tips');
+      t.end();
+   });
+
+});

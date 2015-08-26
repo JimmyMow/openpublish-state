@@ -11,7 +11,6 @@ var OpenpublishState = function(baseOptions) {
   };
 
   var findTips = function(options) {
-    console.log(options.sha1);
     return axios.get(baseUrl + "/opendocs/sha1/" + options.sha1 + "/tips")
       .then(function(res) {
         var totalTipAmount = 0;
@@ -69,16 +68,42 @@ var OpenpublishState = function(baseOptions) {
   };
 
   var findAllByType = function(options, callback) {
-    var type = options.type;
     var limit = options.limit || 20;
-    return axios.get(baseUrl + "/opendocs?limit=" + limit + "&type=" + type)
+    return axios.get(baseUrl + "/opendocs?limit=" + limit + "&type=" + options.type)
       .then(function(res) {
         var openpublishDocuments = res.data;
         for(var i=0; i < openpublishDocuments.length; i++) {
           processOpenpublishDoc(openpublishDocuments[i]);
         };
-        // openpublishDocuments.forEach(processOpenpublishDoc);
         return { data: openpublishDocuments }
+      })
+      .catch(function(err) {
+        return { err: err };
+      });
+  };
+
+  var findDocsByUser = function (options) {
+    return axios.get(baseUrl + "/addresses/" + options.address + "/opendocs")
+      .then(function(res) {
+        var assetsJson = res.data;
+        if (options.includeTips) {
+          for (var i=0, counter=0; i < assetsJson.length; i++) {
+            var asset = assetsJson[i];
+            return findTips({ sha1: assetsJson[i].sha1 })
+              .then(function(res) {
+                asset.totalTipAmount = res.data.totalTipAmount;
+                asset.tipCount = res.data.tipCount;
+                asset.tips = res.data.tips;
+                if (++counter === assetsJson.length) {
+                  console.log("wait im boutta send!");
+                  return { data: assetsJson };
+                }
+              });
+          }
+        }
+        else {
+          return { data: assetsJson };
+        }
       })
       .catch(function(err) {
         return { err: err };
@@ -89,7 +114,8 @@ var OpenpublishState = function(baseOptions) {
     findTips: findTips,
     findAllTips: findAllTips,
     findDoc: findDoc,
-    findAllByType: findAllByType
+    findAllByType: findAllByType,
+    findDocsByUser: findDocsByUser
   }
 
 };
