@@ -49,3 +49,18 @@ test('should find a document with a sha1 of 2dd0b83677ac2271daab79782f0b9dcb4038
          t.end();
       });
 });
+
+// findAllByType
+test('should find 10 images that have been registered with Open Publish', function(t) {
+   openpublishState.findAllByType({type:'image', limit: 2})
+      .then(function(res) {
+         t.ok(res.data.length === 2, 'has 2 documents');
+         var openpublishDoc = res.data[0];
+         t.ok(openpublishDoc.output.tx_hash, 'txid');
+         t.ok(openpublishDoc.sourceAddresses[0], 'sourceAddresses');
+         t.ok(openpublishDoc.name, 'name');
+         t.ok(openpublishDoc.btih, 'btih');
+         t.ok(openpublishDoc.sha1, 'sha1');
+         t.end();
+      });
+});
