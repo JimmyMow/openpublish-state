@@ -34,7 +34,7 @@ var OpenpublishState = function(baseOptions) {
       var opentips = JSON.parse(body);
       callback(false, opentips)
     });
-  }
+  };
 
   var findDoc = function(options, callback) {
     var sha1 = options.sha1;

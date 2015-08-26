@@ -6,6 +6,7 @@ var OpenpublishState = function(baseOptions) {
   var baseUrl = baseOptions.baseUrl || network == "testnet" ? "https://bsync-test.blockai.com" : "https://bsync.blockai.com";
 
   var findTips = function(options) {
+    console.log(options.sha1);
     return axios.get(baseUrl + "/opendocs/sha1/" + options.sha1 + "/tips")
       .then(function(res) {
         var totalTipAmount = 0;
@@ -20,7 +21,7 @@ var OpenpublishState = function(baseOptions) {
         };
       })
       .catch(function(err) {
-        console.log("err: ", err);
+        console.log("here");
         return err;
       });
   };
@@ -30,5 +31,12 @@ var OpenpublishState = function(baseOptions) {
   }
 
 };
+
+// var findAllTips = function(options, callback) {
+//   return axios.get(baseUrl + "/opentips")
+//     .then(function(res) {
+//       return res.body;
+//     });
+// };
 
 module.exports = OpenpublishState;
