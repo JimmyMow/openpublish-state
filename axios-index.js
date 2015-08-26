@@ -21,22 +21,26 @@ var OpenpublishState = function(baseOptions) {
         };
       })
       .catch(function(err) {
-        console.log("here");
-        return err;
+        return { err: err };
+      });
+  };
+
+  var findAllTips = function(options) {
+    return axios.get(baseUrl + "/opentips")
+      .then(function(res) {
+        return res.data;
+      })
+      .catch(function(err) {
+        return { err: err };
       });
   };
 
   return {
-    findTips: findTips
+    findTips: findTips,
+    findAllTips: findAllTips
   }
 
 };
 
-// var findAllTips = function(options, callback) {
-//   return axios.get(baseUrl + "/opentips")
-//     .then(function(res) {
-//       return res.body;
-//     });
-// };
 
 module.exports = OpenpublishState;
