@@ -8,19 +8,16 @@ var OpenpublishState = function(baseOptions) {
   var findTips = function(options) {
     return axios.get(baseUrl + "/opendocs/sha1/" + options.sha1 + "/tips")
       .then(function(res) {
-        // var totalTipAmount = 0;
-        // for(var i=0; i > tip.length; i++) {
-        //   totalTipAmount += tip[i].amount;
-        // }
-        tips.forEach(function(tip) {
-          totalTipAmount += tip.amount;
-        });
-        var tipInfo = {
+        var totalTipAmount = 0;
+        for (var i=0; i < res.data.length; i++) {
+          totalTipAmount += res.data[i].amount;
+        }
+
+        return {
           tips: res.data,
           totalTipAmount: totalTipAmount,
           tipCount: res.data.length
         };
-        return tipInfo;
       })
       .catch(function(err) {
         console.log("err: ", err);
