@@ -1,4 +1,4 @@
-var request = require('request');
+var axios = require('axios');
 
 var OpenpublishState = function(baseOptions) {
 
@@ -10,120 +10,145 @@ var OpenpublishState = function(baseOptions) {
     return doc;
   };
 
-  var findTips = function(options, callback) {
-    var sha1 = options.sha1;
-    request(baseUrl + "/opendocs/sha1/" + sha1 + "/tips", function(err, res, body) {
+  var findTips = function(options) {
+    return axios.get(baseUrl + "/opendocs/sha1/" + options.sha1 + "/tips")
+      .then(function(res) {
+        var totalTipAmount = 0;
+        for (var i=0; i < res.data.length; i++) {
+          totalTipAmount += res.data[i].amount;
+        }
 
-      var tips = JSON.parse(body);
-      var totalTipAmount = 0;
-      var tipCount = tips.length;
-      tips.forEach(function(tip) {
-        totalTipAmount += tip.amount;
+        var data =  {
+          tips: res.data,
+          totalTipAmount: totalTipAmount,
+          tipCount: res.data.length
+        };
+
+        return { data: data };
+      })
+      .catch(function(err) {
+        return { err: err };
       });
-      var tipInfo = {
-        tips: tips,
-        totalTipAmount: totalTipAmount,
-        tipCount: tipCount
-      };
-      callback(err, tipInfo)
-    });
   };
 
-  var findAllTips = function(options, callback) {
-    request(baseUrl + "/opentips", function(err, resp, body) {
-      var opentips = JSON.parse(body);
-      callback(false, opentips)
-    });
+  var findAllTips = function(options) {
+    return axios.get(baseUrl + "/opentips")
+      .then(function(res) {
+        return { data: res.data };
+      })
+      .catch(function(err) {
+        return { err: err };
+      });
   };
 
-  var findDoc = function(options, callback) {
-    var sha1 = options.sha1;
-    request(baseUrl + "/opendocs/sha1/" + sha1, function(err, res, body) {
-      var openpublishDoc = JSON.parse(body);
-      if (!openpublishDoc) {
-        return callback(true, false);
-      }
-      processOpenpublishDoc(openpublishDoc);
-      if (options.includeTips) {
-        findTips({sha1:sha1}, function(err, tipInfo) {
-          openpublishDoc.totalTipAmount = tipInfo.totalTipAmount;
-          openpublishDoc.tipCount = tipInfo.tipCount;
-          openpublishDoc.tips = tipInfo.tips;
-          callback(err, openpublishDoc);
-        });
-      }
-      else {
-        callback(err, openpublishDoc);
-      }
+  var findDoc = function(options) {
+    return axios.get(baseUrl + "/opendocs/sha1/" + options.sha1)
+      .then(function(res) {
+        var openpublishDoc = res.data;
+        if (!openpublishDoc) {
+          return { err: true };
+        }
+        processOpenpublishDoc(openpublishDoc);
+        if (options.includeTips) {
+          findTips({sha1:sha1})
+            .then(function(res) {
+              openpublishDoc.totalTipAmount = res.totalTipAmount;
+              openpublishDoc.tipCount = res.tipCount;
+              openpublishDoc.tips = res.tips;
+            })
+            .catch(function(err) {
+              return { err: err }
+            });
+            return { data: openpublishDoc };
+        }
+        else {
+          return { data: openpublishDoc };
+        }
     });
   };
 
   var findAllByType = function(options, callback) {
-    var type = options.type;
     var limit = options.limit || 20;
-    request(baseUrl + "/opendocs?limit=" + limit + "&type=" + type, function(err, res, body) {
-      try {
-        var openpublishDocuments = JSON.parse(body);
-        openpublishDocuments.forEach(processOpenpublishDoc);
-        callback(err, openpublishDocuments);
-      }
-      catch (e) {
-        callback(true, []);
-      }
-    });
+    return axios.get(baseUrl + "/opendocs?limit=" + limit + "&type=" + options.type)
+      .then(function(res) {
+        var openpublishDocuments = res.data;
+        for(var i=0; i < openpublishDocuments.length; i++) {
+          processOpenpublishDoc(openpublishDocuments[i]);
+        };
+        return { data: openpublishDocuments }
+      })
+      .catch(function(err) {
+        return { err: err };
+      });
   };
 
-  var findDocsByUser = function (options, callback) {
-    var address = options.address;
-    request(baseUrl + "/addresses/" + address + "/opendocs", function (err, res, body) {
-      var assetsJson = JSON.parse(body);
-      if (options.includeTips) {
-        var i = 0;
-        assetsJson.forEach(function (asset) {
-          findTips({ sha1: asset.sha1 }, function (err, tipInfo) {
-            asset.totalTipAmount = tipInfo.totalTipAmount;
-            asset.tipCount = tipInfo.tipCount;
-            asset.tips = tipInfo.tips;
-            if (++i === assetsJson.length) {
-              // console.log("passing assetsJson: ", assetsJson);
-              callback(err, assetsJson);
-            }
-          });
-        });
-      }
-      else {
-        callback(err, assetsJson);
-      }
-    });
-  }
+  var findDocsByUser = function (options) {
+    return axios.get(baseUrl + "/addresses/" + options.address + "/opendocs")
+      .then(function(res) {
+        var assetsJson = res.data;
+        if (options.includeTips) {
+          var pTips = [];
+          for (var i=0, counter=0; i < assetsJson.length; i++) {
+            var asset = assetsJson[i];
+            pTips.push(findTips({ sha1: assetsJson[i].sha1 })
+              .then(function(res) {
+                return res.data;
+              }));
+          }
+          return axios.all(pTips)
+            .then(function(tips) {
+              for(var i=0; i < assetsJson.length; i++) {
+                for(prop in tips[i]) assetsJson[i][prop] = tips[i][prop];
+              }
+              return { data: assetsJson };
+            });
+        }
+        else {
+          return { data: assetsJson };
+        }
+      })
+      .catch(function(err) {
+        return { err: err };
+      });
+  };
 
-  var findTipsByUser = function (options, callback) {
+  var findTipsByUser = function (options) {
     var address = options.address;
-    request(baseUrl + "/addresses/" + address + "/opentips", function (err, res, body) {
-      var tipsJson = JSON.parse(body);
-      callback(err, tipsJson)
-    });
-  }
+    return axios.get(baseUrl + "/addresses/" + address + "/opentips")
+      .then(function(res) {
+        return { data: res.data };
+      })
+      .catch(function(err) {
+        return { err: err };
+      });
+  };
 
   var findAll = function(options, callback) {
     var limit = options.limit || 20;
-    request(baseUrl + "/opendocs?limit=" + limit, function(err, res, body) {
-      var openpublishDocuments = JSON.parse(body);
-      openpublishDocuments.forEach(processOpenpublishDoc);
-      callback(err, openpublishDocuments);
-    });
+    return axios.get(baseUrl + "/opendocs?limit=" + limit)
+      .then(function(res) {
+        var openpublishDocuments = res.data;
+        for (var i=0; i < openpublishDocuments.length; i++) {
+          processOpenpublishDoc(openpublishDocuments[i]);
+        }
+        return { data: openpublishDocuments }
+      })
+      .catch(function(err) {
+        return { err: err };
+      });
   };
 
   return {
-    findDoc: findDoc,
     findTips: findTips,
-    findAll: findAll,
     findAllTips: findAllTips,
+    findDoc: findDoc,
+    findAllByType: findAllByType,
     findDocsByUser: findDocsByUser,
     findTipsByUser: findTipsByUser,
-    findAllByType: findAllByType
+    findAll: findAll
   }
 
 };
+
 
 module.exports = OpenpublishState;
