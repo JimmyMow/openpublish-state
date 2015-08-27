@@ -113,12 +113,40 @@ var OpenpublishState = function(baseOptions) {
       });
   };
 
+  var findTipsByUser = function (options) {
+    var address = options.address;
+    return axios.get(baseUrl + "/addresses/" + address + "/opentips")
+      .then(function(res) {
+        return { data: res.data };
+      })
+      .catch(function(err) {
+        return { err: err };
+      });
+  };
+
+  var findAll = function(options, callback) {
+    var limit = options.limit || 20;
+    return axios.get(baseUrl + "/opendocs?limit=" + limit)
+      .then(function(res) {
+        var openpublishDocuments = res.data;
+        for (var i=0; i < openpublishDocuments.length; i++) {
+          processOpenpublishDoc(openpublishDocuments[i]);
+        }
+        return { data: openpublishDocuments }
+      })
+      .catch(function(err) {
+        return { err: err };
+      });
+  };
+
   return {
     findTips: findTips,
     findAllTips: findAllTips,
     findDoc: findDoc,
     findAllByType: findAllByType,
-    findDocsByUser: findDocsByUser
+    findDocsByUser: findDocsByUser,
+    findTipsByUser: findTipsByUser,
+    findAll: findAll
   }
 
 };

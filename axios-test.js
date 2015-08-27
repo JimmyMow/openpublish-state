@@ -65,6 +65,21 @@ test('should find 10 images that have been registered with Open Publish', functi
       });
 });
 
+test('should find 10 images that have been registered with Open Publish', function(t) {
+   openpublishState.findAllByType({type:'image', limit: 2})
+      .then(function(res) {
+         var openpublishDocuments = res.data;
+         t.ok(openpublishDocuments.length === 2, 'has 2 documents');
+         var openpublishDoc = openpublishDocuments[0];
+         t.ok(openpublishDoc.output.tx_hash, 'txid');
+         t.ok(openpublishDoc.sourceAddresses[0], 'sourceAddresses');
+         t.ok(openpublishDoc.name, 'name');
+         t.ok(openpublishDoc.btih, 'btih');
+         t.ok(openpublishDoc.sha1, 'sha1');
+         t.end();
+      });
+});
+
 // findDocsByUser
 test('should find all opendocs by specified user', function (t) {
    openpublishState.findDocsByUser({address: "mjf6CRReqGSyvbgryjE3fbGjptRRfAL7cg"})
@@ -102,5 +117,40 @@ test('should find all opendocs and opendocs\' tips by specified user', function 
       t.ok(doc.totalTipAmount === 31501, 'total tip amount is 31501');
       t.end();
    });
-
 });
+
+// findTipsByUser
+test('should find all opentips for a specified user', function (t) {
+  openpublishState.findTipsByUser({address: "mjf6CRReqGSyvbgryjE3fbGjptRRfAL7cg"})
+   .then(function(res) {
+      var tips = res.data;
+      t.ok(!res.err, 'err is false');
+      t.ok(tips.length > 0, "found some posts at this address");
+      t.end();
+   });
+});
+
+// findAll
+test('should find all documents that have been registered with Open Publish', function(t) {
+   openpublishState.findAll({})
+      .then(function(res) {
+         var openpublishDocuments = res.data;
+         t.ok(openpublishDocuments.length > 0, 'has some documents');
+         var openpublishDoc = openpublishDocuments[0];
+         t.ok(openpublishDoc.output.tx_hash, 'txid');
+         t.ok(openpublishDoc.sourceAddresses[0], 'sourceAddresses');
+         t.ok(openpublishDoc.name, 'name');
+         t.ok(openpublishDoc.btih, 'btih');
+         t.ok(openpublishDoc.sha1, 'sha1');
+         t.end();
+      });
+});
+
+test('should find only 3 documents that have been registered with Open Publish', function(t) {
+   openpublishState.findAll({limit: 3})
+      .then(function(res) {
+         t.ok(res.data.length === 3, 'has 3 documents');
+         t.end();
+      });
+});
+
