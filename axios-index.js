@@ -97,9 +97,9 @@ var OpenpublishState = function(baseOptions) {
               }));
           }
           return Promise.all(pTips)
-            .then(function(thing) {
+            .then(function(tips) {
               for(var i=0; i < assetsJson.length; i++) {
-                for(prop in thing[i]) assetsJson[i][prop] = thing[i][prop];
+                for(prop in tips[i]) assetsJson[i][prop] = tips[i][prop];
               }
               return { data: assetsJson };
             });
