@@ -86,7 +86,7 @@ test('should find all opendocs and opendocs\' tips by specified user', function 
     address: "mjf6CRReqGSyvbgryjE3fbGjptRRfAL7cg",
     includeTips: true
    }).then(function(res) {
-      console.log("here at test with: ", res);
+      // console.log("here at test with: ", res);
       t.ok(!res.err, 'err is false');
       t.ok(res.data.length > 0, "found some posts at this address");
       var doc = res.data[0];
@@ -95,10 +95,11 @@ test('should find all opendocs and opendocs\' tips by specified user', function 
       t.ok(doc.name !== null, "doc's name should not be null");
       t.ok(doc.size !== null, "doc's size should not be null");
       t.ok(doc.type !== null, "doc's type should not be null");
-      console.log("doc: ", doc);
       t.ok(doc.tipCount >= 0, 'tipCount');
       t.ok(doc.totalTipAmount >= 0, 'totalTipAmount');
       t.ok(doc.tips.length >= 0, 'tips');
+      t.ok(doc.tipCount === 3, 'tip count is 3');
+      t.ok(doc.totalTipAmount === 31501, 'total tip amount is 31501');
       t.end();
    });
 

@@ -85,6 +85,7 @@ var OpenpublishState = function(baseOptions) {
             asset.tipCount = tipInfo.tipCount;
             asset.tips = tipInfo.tips;
             if (++i === assetsJson.length) {
+              // console.log("passing assetsJson: ", assetsJson);
               callback(err, assetsJson);
             }
           });

@@ -114,6 +114,7 @@ test('should find all opendocs and opendocs\' tips by specified user', function 
     t.ok(!err, 'err is false');
     t.ok(docs.length > 0, "found some posts at this address");
     var doc = docs[0];
+    console.log("passing doc: ", doc);
     t.ok(doc.sha1 !== null, "doc's sha1 should not be null");
     t.ok(doc.btih !== null, "doc's btih should not be null");
     t.ok(doc.name !== null, "doc's name should not be null");

@@ -1,4 +1,5 @@
 var axios = require('axios');
+var Promise = require("es6-promise").Promise;
 
 var OpenpublishState = function(baseOptions) {
 
@@ -87,19 +88,21 @@ var OpenpublishState = function(baseOptions) {
       .then(function(res) {
         var assetsJson = res.data;
         if (options.includeTips) {
+          var pTips = [];
           for (var i=0, counter=0; i < assetsJson.length; i++) {
             var asset = assetsJson[i];
-            return findTips({ sha1: assetsJson[i].sha1 })
+            pTips.push(findTips({ sha1: assetsJson[i].sha1 })
               .then(function(res) {
-                asset.totalTipAmount = res.data.totalTipAmount;
-                asset.tipCount = res.data.tipCount;
-                asset.tips = res.data.tips;
-                if (++counter === assetsJson.length) {
-                  console.log("wait im boutta send!");
-                  return { data: assetsJson };
-                }
-              });
+                return res.data;
+              }));
           }
+          return Promise.all(pTips)
+            .then(function(thing) {
+              for(var i=0; i < assetsJson.length; i++) {
+                for(prop in thing[i]) assetsJson[i][prop] = thing[i][prop];
+              }
+              return { data: assetsJson };
+            });
         }
         else {
           return { data: assetsJson };
